@@ -23,8 +23,22 @@
 
 ## Install some backend Packages
 
-```javascript 
-npm i -D nodemon
 
-```
+1. npm i -D nodemon
 2. npm i -D preetier -> it comes with some setup
+3. npm i express mongoose bcrypt dotenv cors cookie-parser jsonwebtoken multer
+mongoose-aggregate-paginate-v2 cloudinary
+4. 
+
+
+
+
+## prettier setup
+> .prettierec
+> {
+    "singleQuote": false,
+    "bracketSpacing": true,
+    "tabWidth": 2,
+    "trailingComma": "es5",
+    "semi": true
+}

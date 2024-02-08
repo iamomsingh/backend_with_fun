@@ -4,6 +4,7 @@ import { User } from "../models/userModel.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -162,8 +163,8 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        refreshToken: undefined,
+      $unset: {
+        refreshToken: 1, //this remove the  fields from document
       },
     },
     {
@@ -263,9 +264,9 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-  const { fullName, email } = req.body;
+  const { fullName, email, userName } = req.body;
 
-  if (!(fullName || email)) {
+  if (!(fullName || email || userName)) {
     throw new ApiError(400, "All fields are required");
   }
 
@@ -274,6 +275,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     {
       $set: {
         fullName,
+        userName,
         email,
       },
     },
@@ -357,7 +359,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
   const channel = await User.aggregate([
     {
       $match: {
-        username: userName.toLowerCase(),
+        userName: userName.toLowerCase(),
       },
     },
     {
@@ -452,16 +454,11 @@ const getWatchHistory = asyncHandler(async (req, res) => {
           {
             $addFields: {
               owner: {
-                $arrayElementAt: "$owner",
+                $first: "$owner",
               },
             },
           },
         ],
-      },
-    },
-    {
-      $project: {
-        watchHistory: 1,
       },
     },
   ]);
