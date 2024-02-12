@@ -20,8 +20,12 @@ app.use(cookieParser()); //cookie-parser basically used to access the user brows
 
 //routes import
 import userRouter from "./routes/userRoutes.js";
+import videoRouter from "./routes/videoRoutes.js";
+import subscriptionRouter from "./routes/subscriptionRoutes.js";
 
 //routes declaration
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/video", videoRouter);
+app.use("/api/v1/subscriptions", subscriptionRouter);
 
 export { app };
