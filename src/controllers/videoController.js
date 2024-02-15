@@ -10,7 +10,6 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "../utils/cloudinary.js";
-import { text } from "express";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   //TODO: get all videos based on query, sort, pagination
@@ -320,7 +319,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
   //or
   await User.findByIdAndUpdate(
-    userId,
+    req.user?._id,
     {
       $addToSet: {
         watchHistory: videoId,
@@ -331,7 +330,9 @@ const getVideoById = asyncHandler(async (req, res) => {
     }
   );
 
-  return res.status(200).json(new ApiResponse(200, video[0], "video found"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, video[0], "video details fetched successfully"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
@@ -373,18 +374,18 @@ const updateVideo = asyncHandler(async (req, res) => {
   const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
 
   if (!thumbnail) {
-    throw new ApiError(400, "thumbnail not found");
+    throw new ApiError(500, "thumbnail not found");
   }
 
-  const updatedVideo = Video.findByIdAndUpdate(
-    videoId,
+  const updatedVideo = await Video.findByIdAndUpdate(
+    video?._id,
     {
       $set: {
         title,
         description,
         thumbnail: {
           public_id: thumbnail.public_id,
-          url: thumbnail.secure_url,
+          url: thumbnail.url,
         },
       },
     },
@@ -394,7 +395,7 @@ const updateVideo = asyncHandler(async (req, res) => {
   );
 
   if (!updatedVideo) {
-    throw new ApiError(400, "Error while updating the video.");
+    throw new ApiError(500, "Error while updating the video.");
   }
 
   if (updatedVideo) {
