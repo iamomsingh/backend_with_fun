@@ -37,16 +37,20 @@ router.route("/login").post(loginUser);
 //secured routes
 router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);
-router.route("/change-password").post(verifyJWT, changeCurrentPassword);
+router
+  .route("/change-password")
+  .post(upload.none(), verifyJWT, changeCurrentPassword);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
-router.route("/update-account").patch(verifyJWT, updateAccountDetails);
+router
+  .route("/update-account")
+  .patch(upload.none(), verifyJWT, updateAccountDetails);
 
 router
-  .route("/avatar")
+  .route("/update-avatar")
   .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 
 router
-  .route("/cover-image")
+  .route("/update-cover-image")
   .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
 
 router.route("/c/:userName").get(verifyJWT, getUserChannelProfile);

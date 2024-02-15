@@ -1,7 +1,10 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/userModel.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -24,6 +27,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
     );
   }
 };
+
 const registerUser = asyncHandler(async (req, res) => {
   //get user data from frontend
   //validation -empty data or not
@@ -53,7 +57,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   // checkimg for files
-  console.log(req.files);
+  console.log("req.files", req.files);
   const avatarLocalPath = req.files?.avatar[0]?.path;
   //   const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
@@ -79,8 +83,14 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const user = await User.create({
     fullName,
-    avatar: avatar.url,
-    coverImage: coverImage?.url || "",
+    avatar: {
+      public_id: avatar.public_id,
+      url: avatar.secure_url,
+    },
+    coverImage: {
+      public_id: coverImage?.public_id || "",
+      url: coverImage?.secure_url || "",
+    },
     email,
     password,
     userName: userName.toLowerCase(),
@@ -200,10 +210,17 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     const user = await User.findById(decodedToken?._id);
 
+    // shortcut step for verification of refresh token, there is no need to decoded incoming refresh token we can directly find user by using refresh token.
+
+    // const user = await User.findOne({
+    //   refreshToken: incomingRefreshToken,
+    // });
+
     if (!user) {
       throw new ApiError(401, "Invalid refresh token");
     }
 
+    // if using shortcut method then this step is also not required.
     if (incomingRefreshToken !== user?.refreshToken) {
       throw new ApiError(401, "Refresh token is Expired or used");
     }
@@ -282,7 +299,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     {
       new: true,
     }
-  ).select("-password");
+  ).select("-password -refreshToken");
 
   return res
     .status(200)
@@ -296,17 +313,28 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Avatar file is missing");
   }
 
-  const avatar = new uploadOnCloudinary(avatarLocalPath);
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
 
   if (!avatar.url) {
     throw new ApiError(400, "Error while uploading on Avatar");
   }
 
-  const user = await User.findOneAndUpdate(
+  const user = await User.findById(req.user._id).select("avatar");
+
+  if (!user) {
+    throw new ApiError(400, "user doesn't found.");
+  }
+
+  const avatarToDelete = user.avatar.public_id;
+
+  const updatedUser = await User.findOneAndUpdate(
     req.user._id,
     {
       $set: {
-        avatar: avatar.url,
+        avatar: {
+          public_id: avatar.public_id,
+          url: avatar.secure_url,
+        },
       },
     },
     {
@@ -314,9 +342,13 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     }
   ).select("-password");
 
+  if (avatarToDelete && updatedUser.avatar.public_id) {
+    await deleteFromCloudinary(avatarToDelete);
+  }
+
   return res
     .status(200)
-    .json(new ApiResponse(200, user, "Avatar updated successfully"));
+    .json(new ApiResponse(200, updatedUser, "Avatar updated successfully"));
 });
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
@@ -326,17 +358,24 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     throw new ApiError(400, "cover image file is missing");
   }
 
-  const coverImage = new uploadOnCloudinary(avatarLocalPath);
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
   if (!coverImage.url) {
-    throw new ApiError(400, "Error while uploading on Avatar");
+    throw new ApiError(400, "Error while uploading coverImage");
   }
 
-  const user = await User.findOneAndUpdate(
+  const user = await User.findById(req.user._id).select("coverImage");
+
+  const coverImageToDelete = user.coverImage.public_id;
+
+  const updatedUser = await User.findOneAndUpdate(
     req.user._id,
     {
       $set: {
-        coverImage: coverImage.url,
+        coverImage: {
+          public_id: coverImage.public_id,
+          coverImage: coverImage.secure_url,
+        },
       },
     },
     {
@@ -344,9 +383,15 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     }
   ).select("-password");
 
+  if (coverImageToDelete && updatedUser.coverImage.public_id) {
+    await deleteFromCloudinary(coverImageToDelete);
+  }
+
   return res
     .status(200)
-    .json(new ApiResponse(200, user, "Cover Image updated successfully"));
+    .json(
+      new ApiResponse(200, updatedUser, "Cover Image updated successfully")
+    );
 });
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
@@ -409,9 +454,10 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     },
   ]);
 
-  if (!channel?.length) {
-    throw new ApiError(404, "channel does not exists");
-  }
+  console.log(channel);
+  // if (!channel?.length) {
+  //   throw new ApiError(404, "channel does not exists");
+  // }
 
   return res
     .status(200)
