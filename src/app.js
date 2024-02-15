@@ -26,6 +26,7 @@ import commentRouter from "./routes/commentRoutes.js";
 import likeRouter from "./routes/likeRoutes.js";
 import playlistRouter from "./routes/playlistRoutes.js";
 import tweetRouter from "./routes/tweetRoutes.js";
+import dashboardRouter from "./routes/dashboardRoutes.js";
 
 //routes declaration
 app.use("/api/v1/users", userRouter);
@@ -35,5 +36,6 @@ app.use("/api/v1/comment", commentRouter);
 app.use("/api/v1/likes", likeRouter);
 app.use("/api/v1/playlist", playlistRouter);
 app.use("/api/v1/tweet", tweetRouter);
+app.use("/api/v1/dashboard", dashboardRouter);
 
 export { app };
