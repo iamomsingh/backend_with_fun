@@ -81,7 +81,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
           {
             $project: {
               userName: 1,
-              "avatr.url": 1,
+              "avatar.url": 1,
             },
           },
         ],
@@ -208,14 +208,6 @@ const getVideoById = asyncHandler(async (req, res) => {
     },
     {
       $lookup: {
-        from: "comments",
-        localField: "_id",
-        foreignField: "video",
-        as: "comments",
-      },
-    },
-    {
-      $lookup: {
         from: "users",
         localField: "owner",
         foreignField: "_id",
@@ -260,9 +252,6 @@ const getVideoById = asyncHandler(async (req, res) => {
       $addFields: {
         owner: {
           $first: "$owner",
-        },
-        commentsCount: {
-          $size: "$comments",
         },
         likesCount: {
           $size: "$likes",

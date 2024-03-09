@@ -121,7 +121,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const { userName, email, password } = req.body;
 
-  if (!userName && !email) {
+  if (!(userName || email)) {
     throw new ApiError(400, "userName or email are required...");
   }
 
@@ -203,31 +203,32 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 
   try {
-    const decodedToken = jwt.verify(
-      incomingRefreshToken,
-      process.env.REFRESH_TOKEN_SECRET
-    );
-
-    const user = await User.findById(decodedToken?._id);
+    //     const decodedToken = jwt.verify(
+    //       incomingRefreshToken,
+    //       process.env.REFRESH_TOKEN_SECRET
+    //     );
+    //
+    //     const user = await User.findById(decodedToken?._id);
 
     // shortcut step for verification of refresh token, there is no need to decoded incoming refresh token we can directly find user by using refresh token.
 
-    // const user = await User.findOne({
-    //   refreshToken: incomingRefreshToken,
-    // });
+    const user = await User.findOne({
+      refreshToken: incomingRefreshToken,
+    });
 
     if (!user) {
       throw new ApiError(401, "Invalid refresh token");
     }
 
     // if using shortcut method then this step is also not required.
-    if (incomingRefreshToken !== user?.refreshToken) {
-      throw new ApiError(401, "Refresh token is Expired or used");
-    }
+    // if (incomingRefreshToken !== user?.refreshToken) {
+    //   throw new ApiError(401, "Refresh token is Expired or used");
+    // }
 
     const options = {
       httpOnly: true,
       secure: true,
+      sameSite: "None",
     };
 
     const { accessToken, newRefreshToken } =
@@ -281,9 +282,9 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-  const { fullName, email, userName } = req.body;
+  const { fullName, email } = req.body;
 
-  if (!(fullName || email || userName)) {
+  if (!(fullName || email)) {
     throw new ApiError(400, "All fields are required");
   }
 
@@ -292,7 +293,6 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     {
       $set: {
         fullName,
-        userName,
         email,
       },
     },
@@ -374,7 +374,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
       $set: {
         coverImage: {
           public_id: coverImage.public_id,
-          coverImage: coverImage.secure_url,
+          url: coverImage.secure_url,
         },
       },
     },
@@ -395,16 +395,16 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 });
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
-  const { userName } = req.params;
+  const { username } = req.params;
 
-  if (!userName?.trim()) {
+  if (!username?.trim()) {
     throw new ApiError(400, "Username is missing");
   }
 
   const channel = await User.aggregate([
     {
       $match: {
-        userName: userName.toLowerCase(),
+        userName: username,
       },
     },
     {
@@ -428,7 +428,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         subscribersCount: {
           $size: "$subscribers",
         },
-        channelSubscribedToCount: {
+        channelsSubscribedToCount: {
           $size: "$subscribedTo",
         },
         isSubscribed: {
@@ -446,7 +446,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         userName: 1,
         email: 1,
         subscribersCount: 1,
-        channelSubscribedToCount: 1,
+        channelsSubscribedToCount: 1,
         isSubscribed: 1,
         avatar: 1,
         coverImage: 1,
@@ -455,9 +455,9 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
   ]);
 
   console.log(channel);
-  // if (!channel?.length) {
-  //   throw new ApiError(404, "channel does not exists");
-  // }
+  if (!channel?.length) {
+    throw new ApiError(404, "channel does not exists");
+  }
 
   return res
     .status(200)

@@ -9,19 +9,19 @@ import { Like } from "../models/likeModel.js";
 //TODO: get all comments for a video
 const getVideoComments = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 20 } = req.query;
 
   if (!isValidObjectId(videoId)) {
     throw new ApiError(400, "video Id is invalid");
   }
 
-  const video = await Video.findById(videoId);
+  const video = Video.findById(videoId);
 
   if (!video) {
     throw new ApiError(404, "Video not found");
   }
 
-  const commentAggregate = await Comment.aggregate([
+  const commentAggregate = Comment.aggregate([
     {
       $match: {
         video: new mongoose.Types.ObjectId(videoId),
@@ -71,9 +71,8 @@ const getVideoComments = asyncHandler(async (req, res) => {
         createdAt: 1,
         likesCount: 1,
         owner: {
-          _id: 1,
           userName: 1,
-          FullName: 1,
+          fullName: 1,
           "avatar.url": 1,
         },
         isLiked: 1,
@@ -83,7 +82,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
   const options = {
     page: parseInt(page, 1),
-    limit: parseInt(limit, 10),
+    limit: parseInt(limit, 20),
   };
 
   const comments = await Comment.aggregatePaginate(commentAggregate, options);

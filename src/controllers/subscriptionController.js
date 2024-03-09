@@ -168,7 +168,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
           _id: 1,
           userName: 1,
           fullName: 1,
-          "avatr.url": 1,
+          "avatar.url": 1,
           latestVideo: {
             _id: 1,
             "videoFile.url": 1,

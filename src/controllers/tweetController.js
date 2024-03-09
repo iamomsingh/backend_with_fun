@@ -27,7 +27,6 @@ const createTweet = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, tweet, "Tweet created Successfully!!!"));
 });
 
-// TODO: get user tweets
 const getUserTweets = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
@@ -78,7 +77,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
           $size: "$likeDetails",
         },
         ownerDetails: {
-          $first: "$owmerDetails",
+          $first: "$ownerDetails",
         },
         isLiked: {
           $cond: {
@@ -99,15 +98,15 @@ const getUserTweets = asyncHandler(async (req, res) => {
         content: 1,
         ownerDetails: 1,
         likesCount: 1,
-        isLiked: 1,
         createdAt: 1,
+        isLiked: 1,
       },
     },
   ]);
 
   return res
     .status(200)
-    .json(new ApiResponse(200, tweets, "Tweets fetched Successfully"));
+    .json(new ApiResponse(200, tweets, "Tweets fetched successfully"));
 });
 
 //TODO: update tweet

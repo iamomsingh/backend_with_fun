@@ -121,7 +121,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
         from: "videos",
         localField: "video",
         foreignField: "_id",
-        as: "likedVideos",
+        as: "likedVideo",
         pipeline: [
           {
             $lookup: {
@@ -138,7 +138,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
       },
     },
     {
-      $unwind: "$likedVideos",
+      $unwind: "$likedVideo",
     },
     {
       $sort: {
@@ -148,7 +148,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     {
       $project: {
         _id: 0,
-        likedVideos: {
+        likedVideo: {
           _id: 1,
           "videoFile.url": 1,
           "thumbnail.url": 1,
@@ -162,7 +162,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
           ownerDetails: {
             userName: 1,
             fullName: 1,
-            "avatr.url": 1,
+            "avatar.url": 1,
           },
         },
       },
@@ -179,5 +179,33 @@ const getLikedVideos = asyncHandler(async (req, res) => {
       )
     );
 });
+
+// const getLikedVideos = asyncHandler(async (req, res) => {
+//   const { userId } = req.params;
+//   if (!isValidObjectId(userId)) {
+//     throw new ApiError(400, "Invalid user id");
+//   }
+//   const { page = 1, limit = 10 } = req.query;
+//   const parsedLimit = parseInt(limit);
+//   const pageSkip = (page - 1) * parsedLimit;
+//
+//   const allLikedVideos = await Like.find({ likedBy: userId })
+//     .skip(pageSkip)
+//     .limit(parsedLimit)
+//     .populate({
+//       path: "video",
+//       select: "title description thumbnail",
+//       populate: {
+//         path: "owner",
+//         select: "username avatar",
+//       },
+//     });
+//
+//   return res
+//     .status(200)
+//     .json(
+//       new ApiResponse(200, allLikedVideos, "Liked videos fetched successfully")
+//     );
+// });
 
 export { toggleCommentLike, toggleTweetLike, toggleVideoLike, getLikedVideos };
