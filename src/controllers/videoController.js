@@ -362,7 +362,7 @@ const updateVideo = asyncHandler(async (req, res) => {
 
   const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
 
-  if (!thumbnail) {
+  if (!thumbnail.url) {
     throw new ApiError(500, "thumbnail not found");
   }
 
@@ -387,7 +387,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Error while updating the video.");
   }
 
-  if (updatedVideo) {
+  if (oldThumbnail && updatedVideo) {
     await deleteFromCloudinary(oldThumbnail);
   }
 
@@ -422,11 +422,11 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
   //get publicid from videodmodel when save  at a "publishAVideo" time.
   const deleteVideoFromCloudinary = await deleteFromCloudinary(
-    chooseVideoToDelete?.videoPublicId
+    chooseVideoToDelete?.videoFile?.public_id
   );
 
   const deleteThumbnailFromCloudinary = await deleteFromCloudinary(
-    chooseVideoToDelete?.thumbnailPublicId
+    chooseVideoToDelete?.thumbnail?.public_id
   );
 
   if (!(deleteVideoFromCloudinary || deleteThumbnailFromCloudinary)) {
@@ -442,12 +442,6 @@ const deleteVideo = asyncHandler(async (req, res) => {
   await Comment.deleteMany({
     video: videoId,
   });
-
-  //   const deleteVideoFromLocal = await Video.deleteOne(videoId);
-  //
-  //   if (!deleteVideoFromLocal) {
-  //     throw new ApiError(400, "Error Occour while deleting the video from Local");
-  //   }
 
   return res
     .status(200)
