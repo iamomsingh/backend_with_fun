@@ -6,11 +6,11 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-// TODO: Get the channel stats like total video views, total subscribers, total videos, total likes etc.
 const getChannelStats = asyncHandler(async (req, res) => {
+  // TODO: Get the channel stats like total video views, total subscribers, total videos, total likes etc.
   const userId = req.user?._id;
 
-  const totalSubscibers = await Subscription.aggregate([
+  const totalSubscribers = await Subscription.aggregate([
     {
       $match: {
         channel: new mongoose.Types.ObjectId(userId),
@@ -19,14 +19,14 @@ const getChannelStats = asyncHandler(async (req, res) => {
     {
       $group: {
         _id: null,
-        subscriptionCount: {
+        subscribersCount: {
           $sum: 1,
         },
       },
     },
   ]);
 
-  const videos = await Video.aggregate([
+  const video = await Video.aggregate([
     {
       $match: {
         owner: new mongoose.Types.ObjectId(userId),
@@ -66,16 +66,16 @@ const getChannelStats = asyncHandler(async (req, res) => {
   ]);
 
   const channelStats = {
-    totalSubscibers: totalSubscibers[0]?.subscriberCount || 0,
-    totalLiks: videos[0]?.totalLikes || 0,
-    totalViews: videos[0]?.totalViews || 0,
-    totalVideos: videos[0]?.totalVideos || 0,
+    totalSubscribers: totalSubscribers[0]?.subscribersCount || 0,
+    totalLikes: video[0]?.totalLikes || 0,
+    totalViews: video[0]?.totalViews || 0,
+    totalVideos: video[0]?.totalVideos || 0,
   };
 
   return res
     .status(200)
     .json(
-      new ApiResponse(200, channelStats, "Channel stats fetched successfully")
+      new ApiResponse(200, channelStats, "channel stats fetched successfully")
     );
 });
 

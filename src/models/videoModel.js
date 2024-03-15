@@ -29,7 +29,7 @@ const videoSchema = new Schema(
       type: Number,
       required: true,
     },
-    view: {
+    views: {
       type: Number,
       default: 0,
     },
