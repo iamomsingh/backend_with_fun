@@ -4,27 +4,27 @@ import cors from "cors";
 
 const app = express();
 
-// app.use(
-//   cors({
-//     origin: process.env.CORS_ORIGIN,
-//     optionsSuccessStatus: 200,
-//     credentials: true,
-//   })
-// );
-const allowedOrigins = ["https://youtube-twitter.netlify.app"];
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true, // If your frontend sends credentials (cookies, authorization headers)
-};
-
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN,
+    optionsSuccessStatus: 200,
+    credentials: true,
+  })
+);
+// const allowedOrigins = ["https://youtube-twitter.netlify.app"];
+//
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   credentials: true, // If your frontend sends credentials (cookies, authorization headers)
+// };
+//
+// app.use(cors(corsOptions));
 
 // middleware to accept file from different sources
 app.use(express.json({ limit: "16kb" })); // to get data from form in {json} format
