@@ -6,7 +6,11 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: [
+      "https://youtube-twitter.netlify.app",
+      "https://youtube-twitter-frontend.onrender.com",
+      "http://localhost:5173",
+    ],
     optionsSuccessStatus: 200,
     credentials: true,
   })
