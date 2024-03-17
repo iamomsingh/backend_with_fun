@@ -11,7 +11,7 @@ app.use(
       process.env.CORS_ORIGIN_2,
       process.env.CORS_ORIGIN_3,
     ],
-    optionsSuccessStatus: 200,
+    // optionsSuccessStatus: 200,
     credentials: true,
   })
 );
